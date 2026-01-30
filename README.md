@@ -54,11 +54,11 @@ Just like your favorite music app, get a personalized slide-show summary of your
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/yearly-quirks.git
+   git clone https://github.com/dayniia/SideQuest.git
    ```
 2. Navigate to the project folder:
    ```bash
-   cd yearly-quirks
+   cd yearly-trackable
    ```
 3. Install dependencies:
    ```bash

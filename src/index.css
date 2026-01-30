@@ -12,8 +12,8 @@
   --purple: #bdb2ff;
 
   --card-bg: #ffffff;
-  --shadow: 4px 4px 0px var(--border);
-  --shadow-hover: 6px 6px 0px var(--border);
+  --shadow: 3px 3px 0px var(--border);
+  --shadow-hover: 4px 4px 0px var(--border);
 
   --handwritten: 'Fredoka', sans-serif;
 }
@@ -75,36 +75,37 @@ button:hover {
 .card {
   background: var(--card-bg);
   border: 2px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 10px;
+  padding: 16px;
   box-shadow: var(--shadow);
 }
 
-/* Day Square Grid Styles */
-.calendar-scroll-wrapper::-webkit-scrollbar {
-  height: 10px;
-}
-
-.calendar-scroll-wrapper::-webkit-scrollbar-track {
-  background: #eee;
-  border-radius: 10px;
-}
-
-.calendar-scroll-wrapper::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 10px;
-}
-
-.day-square {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: #eee;
+.calendar-day {
+  aspect-ratio: 1/1;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
   position: relative;
-  overflow: visible;
-  /* Changed from hidden to show tooltip */
-  transition: transform 0.1s ease;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background-color: white;
+}
+
+.calendar-day:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px var(--border);
+  z-index: 5;
+}
+
+.calendar-day.today {
+  offset: 3px;
+  outline: 3px solid var(--yellow);
+}
+
+.calendar-day.other-month {
+  opacity: 0.3;
 }
 
 .day-tooltip {
@@ -114,24 +115,23 @@ button:hover {
   transform: translateX(-50%) translateY(-5px);
   background: var(--border);
   color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.2s, transform 0.2s;
+  transition: all 0.2s;
   z-index: 100;
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.2);
 }
 
-.day-square:hover .day-tooltip {
+.calendar-day:hover .day-tooltip {
   opacity: 1;
-  transform: translateX(-50%) translateY(-10px);
+  transform: translateX(-50%) translateY(-12px);
 }
 
-.day-square.active {
-  border: 1.5px solid var(--border);
-}
+
 
 .split-background {
   width: 100%;

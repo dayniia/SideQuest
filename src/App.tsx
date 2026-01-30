@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { type Category, type TrackerEvent, DEFAULT_CATEGORIES } from './types';
-import { format, isSameDay, startOfYear, endOfYear, eachDayOfInterval, getDay, isFirstDayOfMonth } from 'date-fns';
+import { format, isSameDay, eachDayOfInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, isSameMonth } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Icons from 'lucide-react';
-import { Download, Sparkles, Trash2, Plus } from 'lucide-react';
+import { Download, Sparkles, Trash2, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import Wrapped from './Wrapped';
+import logo from './assets/logo.png';
 
 const App: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>(() => {
@@ -22,14 +23,14 @@ const App: React.FC = () => {
   const [newNote, setNewNote] = useState('');
   const [selectedCatId, setSelectedCatId] = useState(categories[0]?.id || '');
   const [showWrapped, setShowWrapped] = useState(false);
+  const [isMonthlyWrapped, setIsMonthlyWrapped] = useState(false);
   const [showCatModal, setShowCatModal] = useState(false);
   const [newCatName, setNewCatName] = useState('');
   const [newCatColor, setNewCatColor] = useState('#ffafcc');
   const [newCatIcon, setNewCatIcon] = useState('Circle');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const QUEST_ICONS = ['Circle', 'Heart', 'Star', 'Ghost', 'Coffee', 'Zap', 'Moon', 'Sun', 'Cloud', 'Trash2', 'Smile', 'Frown', 'Dizzy', 'Bomb', 'Flame'];
-
-  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     localStorage.setItem('yt_categories', JSON.stringify(categories));
@@ -39,38 +40,26 @@ const App: React.FC = () => {
     localStorage.setItem('yt_events', JSON.stringify(events));
   }, [events]);
 
-  const daysInYear = useMemo(() => {
-    const start = startOfYear(new Date(currentYear, 0, 1));
-    const end = endOfYear(new Date(currentYear, 11, 31));
-    return eachDayOfInterval({ start, end });
-  }, [currentYear]);
+  const calendarDays = useMemo(() => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(monthStart);
+    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+    return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  }, [currentDate]);
 
-  const firstDayOfYear = useMemo(() => startOfYear(new Date(currentYear, 0, 1)), [currentYear]);
-  const firstDayOffset = (getDay(firstDayOfYear) + 6) % 7; // Mon=0, Sun=6
-
-  const monthLabels = useMemo(() => {
-    const labels: { name: string; col: number }[] = [];
-    daysInYear.forEach((day, i) => {
-      if (isFirstDayOfMonth(day)) {
-        const col = Math.floor((i + firstDayOffset) / 7);
-        labels.push({ name: format(day, 'MMM'), col });
-      }
-    });
-    return labels;
-  }, [daysInYear, firstDayOffset]);
+  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
 
   const addEvent = () => {
     if (!selectedDay || !selectedCatId) return;
-
     const timestamp = selectedDay.getTime();
-
     const newEvent: TrackerEvent = {
       id: Math.random().toString(36).substring(2, 11),
       categoryId: selectedCatId,
       timestamp,
       note: newNote.trim() || undefined
     };
-
     setEvents(prev => [...prev, newEvent]);
     setNewNote('');
     setShowAddModal(false);
@@ -95,19 +84,15 @@ const App: React.FC = () => {
 
   const getDayColor = (day: Date) => {
     const dayEvents = events.filter(e => isSameDay(new Date(e.timestamp), day));
-
     if (dayEvents.length === 0) return 'transparent';
     if (dayEvents.length === 1) {
       return categories.find(c => c.id === dayEvents[0].categoryId)?.color || '#eee';
     }
-
     const uniqueCats = Array.from(new Set(dayEvents.map(e => e.categoryId)));
     const catColors = uniqueCats.map(cid => categories.find(c => c.id === cid)?.color || '#eee');
-
     if (catColors.length === 2) {
       return `linear-gradient(45deg, ${catColors[0]} 50%, ${catColors[1]} 50%)`;
     }
-
     const step = 100 / catColors.length;
     let gradient = `conic-gradient(`;
     catColors.forEach((color, i) => {
@@ -123,28 +108,33 @@ const App: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `yearly-trackable-${currentYear}.json`;
+    a.download = `sidequest-backup-${format(new Date(), 'yyyy-MM-dd')}.json`;
     a.click();
   };
 
   return (
-    <div className="container" style={{ padding: '40px 20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-        <div>
-          <h1 style={{ fontSize: '3rem', marginBottom: '10px' }}>SideQuest <Sparkles style={{ display: 'inline' }} /></h1>
-          <p style={{ opacity: 0.7 }}>Tracking the beautifully unhinged side-quests of {currentYear}</p>
+    <div className="container" style={{ padding: '20px', maxWidth: '850px', margin: '0 auto' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '15px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <img src={logo} alt="SideQuest Logo" style={{ width: '60px', height: '60px', borderRadius: '12px', border: '2px solid var(--border)', boxShadow: 'var(--shadow)', objectFit: 'cover' }} />
+          <div>
+            <h1 style={{ fontSize: '2.2rem', marginBottom: '0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              SideQuest <Sparkles size={24} />
+            </h1>
+            <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>Tracking the beautifully unhinged side-quests</p>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Download size={18} /> Backup
           </button>
           <motion.button
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            onClick={() => setShowWrapped(true)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { setIsMonthlyWrapped(false); setShowWrapped(true); }}
             style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--yellow)' }}
           >
-            <Sparkles size={18} /> Wrapped {currentYear}
+            <Sparkles size={18} /> Yearly Wrapped
           </motion.button>
         </div>
       </header>
@@ -155,262 +145,164 @@ const App: React.FC = () => {
             events={events}
             categories={categories}
             onClose={() => setShowWrapped(false)}
+            month={isMonthlyWrapped ? currentDate : undefined}
           />
         )}
       </AnimatePresence>
 
       <main>
-        <div className="card" style={{ marginBottom: '40px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '1.5rem' }}>The Grid</h2>
-            <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+        <div className="card" style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button onClick={prevMonth} style={{ padding: '6px' }}><ChevronLeft size={18} /></button>
+              <h2 style={{ fontSize: '1.4rem', width: '180px', textAlign: 'center' }}>{format(currentDate, 'MMMM yyyy')}</h2>
+              <button onClick={nextMonth} style={{ padding: '6px' }}><ChevronRight size={18} /></button>
+              <button
+                onClick={() => { setIsMonthlyWrapped(true); setShowWrapped(true); }}
+                style={{ marginLeft: '10px', background: 'var(--purple)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}
+              >
+                <Sparkles size={14} /> Monthly Wrapped
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               {categories.map(cat => {
                 const IconComponent = (Icons as any)[cat.icon || 'Circle'];
                 return (
-                  <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9rem', background: cat.color + '33', padding: '2px 8px', borderRadius: '20px', border: `1px solid ${cat.color}` }}>
-                    {IconComponent && <IconComponent size={12} />}
+                  <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', background: cat.color + '33', padding: '3px 8px', borderRadius: '15px', border: `2px solid ${cat.color}` }}>
+                    {IconComponent && <IconComponent size={10} />}
                     {cat.name}
                   </div>
                 );
               })}
               <button
                 onClick={() => setShowCatModal(true)}
-                style={{ padding: '2px 8px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                style={{ padding: '3px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
               >
                 <Plus size={12} /> New
               </button>
             </div>
           </div>
 
-          <div className="calendar-scroll-wrapper" style={{
-            overflowX: 'auto',
-            padding: '20px 0',
-            cursor: 'grab',
-            WebkitOverflowScrolling: 'touch'
-          }}>
-            <div style={{ display: 'flex', gap: '10px', minWidth: 'max-content', padding: '0 10px' }}>
-              <div style={{
-                display: 'grid',
-                gridTemplateRows: 'repeat(7, 22px)',
-                gap: '4px',
-                paddingTop: '24px',
-                fontSize: '0.65rem',
-                opacity: 0.4,
-                textAlign: 'right',
-                width: '30px',
-                fontWeight: 'bold',
-                userSelect: 'none'
-              }}>
-                <span>Mon</span>
-                <span>Tue</span>
-                <span>Wed</span>
-                <span>Thu</span>
-                <span>Fri</span>
-                <span>Sat</span>
-                <span>Sun</span>
-              </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', marginBottom: '8px' }}>
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+              <div key={day} style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '0.8rem', opacity: 0.5 }}>{day}</div>
+            ))}
+          </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ position: 'relative', height: '20px', marginBottom: '4px' }}>
-                  {monthLabels.map((lbl, i) => (
-                    <div key={i} style={{
-                      position: 'absolute',
-                      left: `${lbl.col * 26}px`,
-                      fontSize: '0.75rem',
-                      fontWeight: 'bold',
-                      opacity: 0.6,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em'
-                    }}>
-                      {lbl.name}
-                    </div>
-                  ))}
-                </div>
-
-                <div
-                  className="grid-container"
-                  style={{
-                    display: 'grid',
-                    gridTemplateRows: 'repeat(7, 22px)',
-                    gridAutoFlow: 'column',
-                    gridAutoColumns: '22px',
-                    gap: '4px',
-                    padding: 0,
-                    margin: 0
-                  }}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+            {calendarDays.map((day, i) => {
+              const dayEvents = events.filter(e => isSameDay(new Date(e.timestamp), day));
+              const isCurrentMonth = isSameMonth(day, currentDate);
+              const isToday = isSameDay(day, new Date());
+              return (
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setSelectedDay(day); setShowAddModal(true); }}
+                  className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}`}
+                  style={{ background: getDayColor(day) }}
                 >
-                  {daysInYear.map((day, i) => {
-                    const dayEvents = events.filter(e => isSameDay(new Date(e.timestamp), day));
-                    return (
-                      <motion.div
-                        key={i}
-                        whileHover={{ scale: 1.3, zIndex: 10 }}
-                        className={`day-square ${isSameDay(day, new Date()) ? 'active' : ''}`}
-                        style={{
-                          background: getDayColor(day),
-                          cursor: 'pointer',
-                          gridRow: (getDay(day) === 0 ? 7 : getDay(day)),
-                          border: isSameDay(day, new Date()) ? '2px solid black' : '1px solid rgba(0,0,0,0.05)'
-                        }}
-                        onClick={() => {
-                          setSelectedDay(day);
-                          setShowAddModal(true);
-                        }}
-                      >
-                        {dayEvents.length > 0 && (
-                          <div className="day-tooltip">
-                            <strong>{format(day, 'MMM d')}</strong>: {dayEvents.length} quest{dayEvents.length > 1 ? 's' : ''}
-                          </div>
-                        )}
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '900' }}>{format(day, 'd')}</span>
+                  {dayEvents.length > 0 && (
+                    <div style={{ position: 'absolute', bottom: '6px', right: '6px', display: 'flex', gap: '2px', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '30px' }}>
+                      {dayEvents.slice(0, 4).map((e) => (
+                        <div key={e.id} style={{ width: '6px', height: '6px', borderRadius: '1.5px', border: '1px solid black', background: categories.find(c => c.id === e.categoryId)?.color || 'black' }} />
+                      ))}
+                    </div>
+                  )}
+                  {dayEvents.length > 0 && (
+                    <div className="day-tooltip">
+                      {dayEvents.length} side-quest{dayEvents.length > 1 ? 's' : ''}
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 
         <AnimatePresence>
           {showAddModal && selectedDay && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}
               onClick={() => setShowAddModal(false)}
             >
               <motion.div
-                initial={{ y: 20, scale: 0.95 }}
-                animate={{ y: 0, scale: 1 }}
-                exit={{ y: 20, scale: 0.95 }}
-                className="card"
-                style={{ width: '100%', maxWidth: '500px', cursor: 'default' }}
+                initial={{ y: 20, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }}
+                className="card" style={{ width: '100%', maxWidth: '500px', cursor: 'default' }}
                 onClick={e => e.stopPropagation()}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                  <h3>{format(selectedDay, 'MMMM do, yyyy')}</h3>
-                  <button onClick={() => setShowAddModal(false)} style={{ padding: '4px 8px' }}>X</button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+                  <h3 style={{ fontSize: '1.5rem' }}>{format(selectedDay, 'MMMM do, yyyy')}</h3>
+                  <button onClick={() => setShowAddModal(false)} style={{ padding: '4px 12px', fontSize: '1.2rem' }}>&times;</button>
                 </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <h4 style={{ marginBottom: '10px', fontSize: '0.9rem', opacity: 0.7 }}>Completed Quests:</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ marginBottom: '25px' }}>
+                  <h4 style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Logged Side-Quests</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     {events.filter(e => isSameDay(new Date(e.timestamp), selectedDay)).length === 0 && (
-                      <p style={{ fontStyle: 'italic', fontSize: '0.9rem', opacity: 0.5 }}>Quiet day... no side-quests logged.</p>
+                      <p style={{ fontStyle: 'italic', fontSize: '0.9rem', opacity: 0.5, padding: '15px', textAlign: 'center', border: '2px dashed #ddd', borderRadius: '8px' }}>Quiet day...</p>
                     )}
                     {events.filter(e => isSameDay(new Date(e.timestamp), selectedDay)).map(event => {
                       const cat = categories.find(c => c.id === event.categoryId);
                       return (
-                        <div key={event.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', border: '1px solid #eee', borderRadius: '6px', background: (cat?.color || '#eee') + '22' }}>
-                          <div>
-                            <span style={{ fontWeight: 'bold' }}>{cat?.name}</span>
-                            {event.note && <p style={{ fontSize: '0.85rem' }}>"{event.note}"</p>}
-                          </div>
-                          <button onClick={() => deleteEvent(event.id)} style={{ padding: '2px', border: 'none', background: 'transparent', boxShadow: 'none' }}><Trash2 size={14} color="#ff4d4d" /></button>
+                        <div key={event.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', border: '2px solid var(--border)', borderRadius: '10px', background: cat?.color || '#eee', boxShadow: '2px 2px 0px var(--border)' }}>
+                          <div><span style={{ fontWeight: 'bold' }}>{cat?.name}</span>{event.note && <p style={{ fontSize: '0.85rem' }}>"{event.note}"</p>}</div>
+                          <button onClick={() => deleteEvent(event.id)} style={{ padding: '6px', border: 'none', background: 'white', borderRadius: '6px' }}><Trash2 size={16} color="#ff4d4d" /></button>
                         </div>
                       );
                     })}
                   </div>
                 </div>
-
-                <div style={{ borderTop: '1px solid #eee', paddingTop: '20px' }}>
-                  <h4 style={{ marginBottom: '10px' }}>Add New Side-Quest</h4>
+                <div style={{ borderTop: '2px solid #eee', paddingTop: '20px' }}>
+                  <h4 style={{ marginBottom: '15px' }}>Log New Quest</h4>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '15px' }}>
                     {categories.map(cat => (
-                      <button
-                        key={cat.id}
-                        onClick={() => setSelectedCatId(cat.id)}
-                        style={{
-                          background: selectedCatId === cat.id ? cat.color : 'white',
-                          borderColor: selectedCatId === cat.id ? 'var(--border)' : '#ddd',
-                          fontSize: '0.85rem'
-                        }}
-                      >
-                        {cat.name}
-                      </button>
+                      <button key={cat.id} onClick={() => setSelectedCatId(cat.id)} style={{ background: selectedCatId === cat.id ? cat.color : 'white', fontSize: '0.85rem' }}>{cat.name}</button>
                     ))}
                   </div>
-                  <textarea
-                    placeholder="Describe your quest (optional)..."
-                    value={newNote}
-                    onChange={e => setNewNote(e.target.value)}
-                    style={{ width: '100%', height: '80px', borderRadius: '8px', border: '2px solid var(--border)', padding: '10px', marginBottom: '15px', fontFamily: 'inherit' }}
-                  />
-                  <button onClick={addEvent} style={{ width: '100%', background: 'black', color: 'white', padding: '12px' }}>
-                    Log this quest!
-                  </button>
+                  <textarea value={newNote} onChange={e => setNewNote(e.target.value)} style={{ width: '100%', height: '80px', borderRadius: '10px', border: '2px solid var(--border)', padding: '12px', marginBottom: '15px', fontFamily: 'inherit' }} />
+                  <button onClick={addEvent} style={{ width: '100%', background: 'black', color: 'white', padding: '12px', fontWeight: 'bold' }}>LOG IT!</button>
                 </div>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
+
         <AnimatePresence>
           {showCatModal && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}
               onClick={() => setShowCatModal(false)}
             >
               <motion.div
-                initial={{ y: 20, scale: 0.95 }}
-                animate={{ y: 0, scale: 1 }}
-                exit={{ y: 20, scale: 0.95 }}
-                className="card"
-                style={{ width: '100%', maxWidth: '400px', cursor: 'default' }}
+                initial={{ y: 20, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }}
+                className="card" style={{ width: '100%', maxWidth: '450px', cursor: 'default' }}
                 onClick={e => e.stopPropagation()}
               >
-                <h3 style={{ marginBottom: '20px' }}>What else are we tracking?</h3>
-                <input
-                  type="text"
-                  placeholder="Category name (e.g. 'Coffee Spills')"
-                  value={newCatName}
-                  onChange={e => setNewCatName(e.target.value)}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '2px solid var(--border)', marginBottom: '15px', fontFamily: 'inherit' }}
-                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+                  <h3>New Category</h3>
+                  <button onClick={() => setShowCatModal(false)}>&times;</button>
+                </div>
+                <input type="text" value={newCatName} onChange={e => setNewCatName(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid var(--border)', marginBottom: '20px' }} />
                 <div style={{ marginBottom: '20px' }}>
-                  <p style={{ marginBottom: '10px', fontSize: '0.9rem' }}>Choose a vibe:</p>
-                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {['#ffafcc', '#a2d2ff', '#ffd60a', '#caffbf', '#bdb2ff', '#ff9f1c', '#2ec4b6'].map(color => (
-                      <div
-                        key={color}
-                        onClick={() => setNewCatColor(color)}
-                        style={{ width: '30px', height: '30px', borderRadius: '6px', background: color, border: newCatColor === color ? '3px solid black' : '1px solid #ddd', cursor: 'pointer' }}
-                      />
+                      <div key={color} onClick={() => setNewCatColor(color)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: color, border: '2px solid var(--border)', cursor: 'pointer', transform: newCatColor === color ? 'translate(-2px, -2px)' : 'none' }} />
                     ))}
                   </div>
                 </div>
-                <div style={{ marginBottom: '20px' }}>
-                  <p style={{ marginBottom: '10px', fontSize: '0.9rem' }}>Choose an icon:</p>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', background: '#f5f5f5', padding: '10px', borderRadius: '8px' }}>
+                <div style={{ marginBottom: '25px', background: '#f5f5f5', padding: '12px', borderRadius: '12px' }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {QUEST_ICONS.map(iconName => {
                       const IconComp = (Icons as any)[iconName];
-                      return (
-                        <div
-                          key={iconName}
-                          onClick={() => setNewCatIcon(iconName)}
-                          style={{
-                            width: '32px',
-                            height: '32px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: '4px',
-                            background: newCatIcon === iconName ? 'black' : 'transparent',
-                            color: newCatIcon === iconName ? 'white' : 'black',
-                            cursor: 'pointer',
-                            border: '1px solid #ddd'
-                          }}
-                        >
-                          {IconComp && <IconComp size={16} />}
-                        </div>
-                      );
+                      return <div key={iconName} onClick={() => setNewCatIcon(iconName)} style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: newCatIcon === iconName ? 'black' : 'white', color: newCatIcon === iconName ? 'white' : 'black', border: '2px solid var(--border)', cursor: 'pointer' }}>{IconComp && <IconComp size={18} />}</div>;
                     })}
                   </div>
                 </div>
-                <button onClick={addCategory} style={{ width: '100%', background: 'black', color: 'white' }}>Add Category</button>
+                <button onClick={addCategory} style={{ width: '100%', background: 'black', color: 'white', padding: '12px', fontWeight: 'bold' }}>CREATE</button>
               </motion.div>
             </motion.div>
           )}
