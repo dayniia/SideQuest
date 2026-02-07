@@ -72,6 +72,13 @@ button:hover {
   animation: wiggle 0.2s infinite;
 }
 
+.container {
+  width: 100%;
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
 .card {
   background: var(--card-bg);
   border: 2px solid var(--border);
@@ -100,7 +107,6 @@ button:hover {
 }
 
 .calendar-day.today {
-  offset: 3px;
   outline: 3px solid var(--yellow);
 }
 
@@ -131,11 +137,59 @@ button:hover {
   transform: translateX(-50%) translateY(-12px);
 }
 
+.calendar-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
 
+.categories-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
 
-.split-background {
-  width: 100%;
-  height: 100%;
+.calendar-grid-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.weekday-label {
+  text-align: center;
+  font-weight: bold;
+  font-size: 0.8rem;
+  opacity: 0.5;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.event-dots {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 30px;
+}
+
+.event-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 1.5px;
+  border: 1px solid black;
 }
 
 /* Scrollbar lo-fi */
@@ -150,4 +204,87 @@ button:hover {
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 650px) {
+  .container {
+    padding: 12px !important;
+  }
+
+  h1 {
+    font-size: 1.6rem !important;
+  }
+
+  .logo-section {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px !important;
+    width: 100%;
+  }
+
+  .logo-section div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .app-header {
+    justify-content: center !important;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .calendar-controls {
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .categories-list {
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+
+  .btn-text {
+    display: none;
+  }
+
+  .calendar-grid,
+  .calendar-grid-header {
+    gap: 4px;
+  }
+
+  .calendar-day {
+    padding: 2px 4px !important;
+    border-radius: 6px !important;
+  }
+
+  .calendar-day span {
+    font-size: 0.7rem !important;
+    font-weight: 800 !important;
+  }
+
+  .event-dots {
+    bottom: 2px;
+    right: 2px;
+    max-width: 20px;
+  }
+
+  .event-dot {
+    width: 4px;
+    height: 4px;
+    border-width: 0.5px;
+    border-radius: 1px;
+  }
+
+  .card {
+    padding: 10px !important;
+  }
+
+  .day-tooltip {
+    display: none !important;
+  }
 }

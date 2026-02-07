@@ -1,6 +1,25 @@
 # Changelog - SideQuest Web App
 
-All notable changes and improvements made today (2026-01-30) are documented below.
+All notable changes and improvements are documented below.
+
+## [1.1.1] - 2026-02-07
+
+### Added
+- **Full Mobile Responsiveness**: Implemented a comprehensive mobile-first strategy across the entire application.
+- **Adaptive Header**: Redesigned the header to collapse gracefully on small screens, hiding button text and stacking the logo/title for better one-handed use.
+- **Responsive "Wrapped" Experience**: Optimized the slide-show mode with dynamic font sizing and auto-scaling icons for mobile devices.
+
+### Changed
+- **CSS Architecture**: Replaced rigid inline styles with a more flexible, class-based CSS system in `index.css`.
+- **UI Scaling for Mobile**: Reduced calendar grid spacing and date font sizes on smaller viewports to prevent overflow.
+- **Icon Sizing**: Implemented platform-aware icon sizing in the Wrapped component.
+
+### Improved
+- **Category Visualization**: Enhanced the category list layout to wrap naturally on smaller screens.
+- **Event Indicators**: Scaled the event "dots" and reduced their count in the calendar view for clarity on mobile.
+
+### Fixed
+- Fixed JSX nesting and closing tag errors in `App.tsx` during layout refactoring.
 
 ## [1.1.0] - 2026-01-30
 

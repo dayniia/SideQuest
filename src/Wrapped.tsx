@@ -90,7 +90,7 @@ const Wrapped: React.FC<WrappedProps> = ({ events, categories, onClose, month })
     ];
 
     return (
-        <div style={{ position: 'fixed', inset: 0, background: slides[slide].bg, color: slides[slide].textColor || '#2d2d2d', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center', transition: 'background 0.5s ease' }}>
+        <div style={{ position: 'fixed', inset: 0, background: slides[slide].bg, color: slides[slide].textColor || '#2d2d2d', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center', transition: 'background 0.5s ease' }}>
             <button onClick={onClose} style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.2)', border: 'none', boxShadow: 'none', color: 'inherit', padding: '8px 16px', borderRadius: '20px', zIndex: 1001, cursor: 'pointer' }}>Exit</button>
 
             <AnimatePresence mode="wait">
@@ -100,14 +100,14 @@ const Wrapped: React.FC<WrappedProps> = ({ events, categories, onClose, month })
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 1.1 }}
                     transition={{ duration: 0.4 }}
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '800px' }}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '800px', width: '100%' }}
                 >
                     {(() => {
                         const IconComp = (Icons as any)[slides[slide].icon];
-                        return IconComp ? <IconComp size={120} style={{ marginBottom: '40px', opacity: 0.8 }} /> : null;
+                        return IconComp ? <IconComp size={window.innerWidth < 600 ? 80 : 120} style={{ marginBottom: '30px', opacity: 0.8 }} /> : null;
                     })()}
-                    <h2 style={{ fontSize: 'min(4rem, 8vw)', marginBottom: '20px', fontWeight: '900', lineHeight: 1.1, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>{slides[slide].text}</h2>
-                    <p style={{ fontSize: 'min(1.8rem, 4vw)', opacity: 0.9, fontWeight: '500', fontStyle: slide === 3 ? 'italic' : 'normal' }}>{slides[slide].sub}</p>
+                    <h2 style={{ fontSize: 'min(3.5rem, 12vw)', marginBottom: '15px', fontWeight: '900', lineHeight: 1.1, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>{slides[slide].text}</h2>
+                    <p style={{ fontSize: 'min(1.5rem, 6vw)', opacity: 0.9, fontWeight: '500', fontStyle: slide === 3 ? 'italic' : 'normal' }}>{slides[slide].sub}</p>
                 </motion.div>
             </AnimatePresence>
 

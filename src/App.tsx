@@ -113,20 +113,20 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="container" style={{ padding: '20px', maxWidth: '850px', margin: '0 auto' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '15px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+    <div className="container">
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '15px' }} className="app-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }} className="logo-section">
           <img src={logo} alt="SideQuest Logo" style={{ width: '60px', height: '60px', borderRadius: '12px', border: '2px solid var(--border)', boxShadow: 'var(--shadow)', objectFit: 'cover' }} />
           <div>
             <h1 style={{ fontSize: '2.2rem', marginBottom: '0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              SideQuest <Sparkles size={24} />
+              SideQuest <Sparkles className="sparkle-icon" size={24} />
             </h1>
             <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>Tracking the beautifully unhinged side-quests</p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px' }} className="header-actions">
           <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Download size={18} /> Backup
+            <Download size={18} /> <span className="btn-text">Backup</span>
           </button>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -134,7 +134,7 @@ const App: React.FC = () => {
             onClick={() => { setIsMonthlyWrapped(false); setShowWrapped(true); }}
             style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--yellow)' }}
           >
-            <Sparkles size={18} /> Yearly Wrapped
+            <Sparkles size={18} /> <span className="btn-text">Yearly Wrapped</span>
           </motion.button>
         </div>
       </header>
@@ -152,44 +152,45 @@ const App: React.FC = () => {
 
       <main>
         <div className="card" style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="calendar-controls">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
               <button onClick={prevMonth} style={{ padding: '6px' }}><ChevronLeft size={18} /></button>
-              <h2 style={{ fontSize: '1.4rem', width: '180px', textAlign: 'center' }}>{format(currentDate, 'MMMM yyyy')}</h2>
+              <h2 style={{ fontSize: '1.4rem', minWidth: '150px', textAlign: 'center' }}>{format(currentDate, 'MMMM yyyy')}</h2>
               <button onClick={nextMonth} style={{ padding: '6px' }}><ChevronRight size={18} /></button>
-              <button
-                onClick={() => { setIsMonthlyWrapped(true); setShowWrapped(true); }}
-                style={{ marginLeft: '10px', background: 'var(--purple)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}
-              >
-                <Sparkles size={14} /> Monthly Wrapped
-              </button>
             </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              {categories.map(cat => {
-                const IconComponent = (Icons as any)[cat.icon || 'Circle'];
-                return (
-                  <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', background: cat.color + '33', padding: '3px 8px', borderRadius: '15px', border: `2px solid ${cat.color}` }}>
-                    {IconComponent && <IconComponent size={10} />}
-                    {cat.name}
-                  </div>
-                );
-              })}
-              <button
-                onClick={() => setShowCatModal(true)}
-                style={{ padding: '3px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-              >
-                <Plus size={12} /> New
-              </button>
-            </div>
+            <button
+              onClick={() => { setIsMonthlyWrapped(true); setShowWrapped(true); }}
+              className="monthly-wrapped-btn"
+              style={{ background: 'var(--purple)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}
+            >
+              <Sparkles size={14} /> <span className="btn-text">Monthly Wrapped</span>
+            </button>
+          </div>
+          <div className="categories-list">
+            {categories.map(cat => {
+              const IconComponent = (Icons as any)[cat.icon || 'Circle'];
+              return (
+                <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', background: cat.color + '33', padding: '3px 8px', borderRadius: '15px', border: `2px solid ${cat.color}` }}>
+                  {IconComponent && <IconComponent size={10} />}
+                  {cat.name}
+                </div>
+              );
+            })}
+            <button
+              onClick={() => setShowCatModal(true)}
+              style={{ padding: '3px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+            >
+              <Plus size={12} /> New
+            </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', marginBottom: '8px' }}>
+          <div className="calendar-grid-header">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-              <div key={day} style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '0.8rem', opacity: 0.5 }}>{day}</div>
+              <div key={day} className="weekday-label">{day}</div>
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+          <div className="calendar-grid">
             {calendarDays.map((day, i) => {
               const dayEvents = events.filter(e => isSameDay(new Date(e.timestamp), day));
               const isCurrentMonth = isSameMonth(day, currentDate);
@@ -205,9 +206,9 @@ const App: React.FC = () => {
                 >
                   <span style={{ fontSize: '0.85rem', fontWeight: '900' }}>{format(day, 'd')}</span>
                   {dayEvents.length > 0 && (
-                    <div style={{ position: 'absolute', bottom: '6px', right: '6px', display: 'flex', gap: '2px', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '30px' }}>
+                    <div className="event-dots">
                       {dayEvents.slice(0, 4).map((e) => (
-                        <div key={e.id} style={{ width: '6px', height: '6px', borderRadius: '1.5px', border: '1px solid black', background: categories.find(c => c.id === e.categoryId)?.color || 'black' }} />
+                        <div key={e.id} className="event-dot" style={{ background: categories.find(c => c.id === e.categoryId)?.color || 'black' }} />
                       ))}
                     </div>
                   )}
@@ -307,8 +308,8 @@ const App: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
-    </div>
+      </main >
+    </div >
   );
 };
 
