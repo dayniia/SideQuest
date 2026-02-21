@@ -21,7 +21,7 @@ const App: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newNote, setNewNote] = useState('');
-  const [selectedCatId, setSelectedCatId] = useState(categories[0]?.id || '');
+  const [selectedCatIds, setSelectedCatIds] = useState<string[]>([]);
   const [showWrapped, setShowWrapped] = useState(false);
   const [isMonthlyWrapped, setIsMonthlyWrapped] = useState(false);
   const [showCatModal, setShowCatModal] = useState(false);
@@ -52,16 +52,19 @@ const App: React.FC = () => {
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
 
   const addEvent = () => {
-    if (!selectedDay || !selectedCatId) return;
+    if (!selectedDay || selectedCatIds.length === 0) return;
     const timestamp = selectedDay.getTime();
-    const newEvent: TrackerEvent = {
+
+    const newEvents: TrackerEvent[] = selectedCatIds.map(catId => ({
       id: Math.random().toString(36).substring(2, 11),
-      categoryId: selectedCatId,
+      categoryId: catId,
       timestamp,
       note: newNote.trim() || undefined
-    };
-    setEvents(prev => [...prev, newEvent]);
+    }));
+
+    setEvents(prev => [...prev, ...newEvents]);
     setNewNote('');
+    setSelectedCatIds([]);
     setShowAddModal(false);
   };
 
@@ -110,6 +113,14 @@ const App: React.FC = () => {
     a.href = url;
     a.download = `sidequest-backup-${format(new Date(), 'yyyy-MM-dd')}.json`;
     a.click();
+  };
+
+  const toggleCategory = (catId: string) => {
+    setSelectedCatIds(prev =>
+      prev.includes(catId)
+        ? prev.filter(id => id !== catId)
+        : [...prev, catId]
+    );
   };
 
   return (
@@ -200,7 +211,7 @@ const App: React.FC = () => {
                   key={i}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => { setSelectedDay(day); setShowAddModal(true); }}
+                  onClick={() => { setSelectedDay(day); setShowAddModal(true); setSelectedCatIds([]); }}
                   className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}`}
                   style={{ background: getDayColor(day) }}
                 >
@@ -257,14 +268,37 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ borderTop: '2px solid #eee', paddingTop: '20px' }}>
-                  <h4 style={{ marginBottom: '15px' }}>Log New Quest</h4>
+                  <h4 style={{ marginBottom: '15px' }}>Log New Quest(s)</h4>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '15px' }}>
                     {categories.map(cat => (
-                      <button key={cat.id} onClick={() => setSelectedCatId(cat.id)} style={{ background: selectedCatId === cat.id ? cat.color : 'white', fontSize: '0.85rem' }}>{cat.name}</button>
+                      <button
+                        key={cat.id}
+                        onClick={() => toggleCategory(cat.id)}
+                        style={{
+                          background: selectedCatIds.includes(cat.id) ? cat.color : 'white',
+                          fontSize: '0.85rem',
+                          border: selectedCatIds.includes(cat.id) ? '2px solid black' : '2px solid var(--border)'
+                        }}
+                      >
+                        {cat.name}
+                      </button>
                     ))}
+                    <button
+                      onClick={() => setShowCatModal(true)}
+                      style={{
+                        fontSize: '0.85rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        background: 'transparent',
+                        border: '2px dashed var(--border)'
+                      }}
+                    >
+                      <Plus size={14} /> New
+                    </button>
                   </div>
-                  <textarea value={newNote} onChange={e => setNewNote(e.target.value)} style={{ width: '100%', height: '80px', borderRadius: '10px', border: '2px solid var(--border)', padding: '12px', marginBottom: '15px', fontFamily: 'inherit' }} />
-                  <button onClick={addEvent} style={{ width: '100%', background: 'black', color: 'white', padding: '12px', fontWeight: 'bold' }}>LOG IT!</button>
+                  <textarea value={newNote} onChange={e => setNewNote(e.target.value)} style={{ width: '100%', height: '80px', borderRadius: '10px', border: '2px solid var(--border)', padding: '12px', marginBottom: '15px', fontFamily: 'inherit' }} placeholder="Add a note for these quests..." />
+                  <button onClick={addEvent} disabled={selectedCatIds.length === 0} style={{ width: '100%', background: selectedCatIds.length > 0 ? 'black' : '#ccc', color: 'white', padding: '12px', fontWeight: 'bold' }}>LOG {selectedCatIds.length > 0 ? (selectedCatIds.length > 1 ? `${selectedCatIds.length} QUESTS` : 'QUEST') : 'QUEST'}!</button>
                 </div>
               </motion.div>
             </motion.div>
