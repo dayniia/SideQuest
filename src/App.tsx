@@ -28,6 +28,7 @@ const App: React.FC = () => {
   const [newCatName, setNewCatName] = useState('');
   const [newCatColor, setNewCatColor] = useState('#ffafcc');
   const [newCatIcon, setNewCatIcon] = useState('Circle');
+  const [showConfirm, setShowConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const QUEST_ICONS = ['Circle', 'Heart', 'Star', 'Ghost', 'Coffee', 'Zap', 'Moon', 'Sun', 'Cloud', 'Trash2', 'Smile', 'Frown', 'Dizzy', 'Bomb', 'Flame'];
@@ -69,7 +70,13 @@ const App: React.FC = () => {
   };
 
   const deleteEvent = (id: string) => {
-    setEvents(prev => prev.filter(e => e.id !== id));
+    setShowConfirm({
+      message: 'Delete this logged side-quest?',
+      onConfirm: () => {
+        setEvents(prev => prev.filter(e => e.id !== id));
+        setShowConfirm(null);
+      }
+    });
   };
 
   const addCategory = () => {
@@ -83,6 +90,17 @@ const App: React.FC = () => {
     setNewCatName('');
     setNewCatIcon('Circle');
     setShowCatModal(false);
+  };
+
+  const deleteCategory = (id: string) => {
+    setShowConfirm({
+      message: 'Delete this category? All logged entries for it will also be removed.',
+      onConfirm: () => {
+        setCategories(prev => prev.filter(c => c.id !== id));
+        setEvents(prev => prev.filter(e => e.categoryId !== id));
+        setShowConfirm(null);
+      }
+    });
   };
 
   const getDayColor = (day: Date) => {
@@ -181,9 +199,27 @@ const App: React.FC = () => {
             {categories.map(cat => {
               const IconComponent = (Icons as any)[cat.icon || 'Circle'];
               return (
-                <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', background: cat.color + '33', padding: '3px 8px', borderRadius: '15px', border: `2px solid ${cat.color}` }}>
-                  {IconComponent && <IconComponent size={10} />}
-                  {cat.name}
+                <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', background: cat.color + '33', padding: '3px 8px', borderRadius: '15px', border: `2px solid ${cat.color}` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {IconComponent && <IconComponent size={10} />}
+                    {cat.name}
+                  </div>
+                  <button
+                    onClick={() => deleteCategory(cat.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '2px',
+                      background: 'rgba(255,255,255,0.5)',
+                      borderRadius: '50%',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#666'
+                    }}
+                  >
+                    <Trash2 size={10} />
+                  </button>
                 </div>
               );
             })}
@@ -338,6 +374,33 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <button onClick={addCategory} style={{ width: '100%', background: 'black', color: 'white', padding: '12px', fontWeight: 'bold' }}>CREATE</button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {showConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px', backdropFilter: 'blur(4px)' }}
+              onClick={() => setShowConfirm(null)}
+            >
+              <motion.div
+                initial={{ y: 20, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }}
+                className="card" style={{ width: '100%', maxWidth: '400px', cursor: 'default', textAlign: 'center' }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ width: '60px', height: '60px', background: '#fff5f5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px' }}>
+                    <Trash2 size={30} color="#ff4d4d" />
+                  </div>
+                  <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Are you sure?</h3>
+                  <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>{showConfirm.message}</p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={() => setShowConfirm(null)} style={{ flex: 1, background: '#eee', color: 'black' }}>Cancel</button>
+                  <button onClick={showConfirm.onConfirm} style={{ flex: 1, background: '#ff4d4d', color: 'white', fontWeight: 'bold' }}>Delete</button>
+                </div>
               </motion.div>
             </motion.div>
           )}
