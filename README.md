@@ -10,10 +10,10 @@ SideQuest is a lo-fi, playful alternative to traditional productivity trackers. 
 ##  Key Features
 
 ###  The SideQuest Grid
-A "GitHub-style" visualization of your entire year. Each day is a square that changes color and pattern based on the quests you log. 
+A "GitHub-style" visualization of your entire year. Each day is a square that changes color and pattern based on the quests you log.
 - **Multi-Quest Days**: Squares use gradients or iconic patterns if you log multiple categories in one day.
 - **Detailed Tooltips**: Hover over any day to see the exact count and notes.
-- **Month Navigation**: Clear labels to keep you oriented across the seasons.
+### Month Navigation: Clear labels to keep you oriented across the seasons.
 
 ###  Custom Quest Engine
 Don't let us define your life. Create your own categories on the fly!
@@ -31,6 +31,20 @@ Just like your favorite music app, get a personalized slide-show summary of your
 ###  Private & Local
 - **LocalStorage Data**: Your quirks stay in your browser. No accounts, no servers, no tracking.
 - **Full Backups**: Export your entire history as a JSON file or import a previous backup in seconds.
+
+---
+
+## 📱 Mobile App (Android)
+
+SideQuest is now available as a native Android app! 🚀
+
+### Download the Latest APK
+1. Visit the [Latest Mobile Build](https://github.com/dayniia/SideQuest/releases/tag/latest) page on GitHub.
+2. Download the `app-debug.apk` file.
+3. Open the file on your phone to install it!
+
+> [!TIP]
+> You may need to enable "Install from Unknown Sources" in your Android settings to install the APK.
 
 ---
 

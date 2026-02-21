@@ -183,6 +183,16 @@ const App: React.FC = () => {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '10px' }} className="header-actions">
+          <a
+            href="https://github.com/dayniia/SideQuest/releases/tag/latest"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary icon-only"
+            title="Download Android App"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Icons.Smartphone size={18} /> <span className="btn-text">APP</span>
+          </a>
           <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Download size={18} /> <span className="btn-text">Backup</span>
           </button>
