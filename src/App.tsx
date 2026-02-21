@@ -184,7 +184,7 @@ const App: React.FC = () => {
         </div>
         <div style={{ display: 'flex', gap: '10px' }} className="header-actions">
           <a
-            href="https://github.com/dayniia/SideQuest/releases/tag/latest"
+            href="https://github.com/dayniia/SideQuest/releases/download/latest/app-debug.apk"
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-secondary icon-only"
