@@ -141,6 +141,35 @@ const App: React.FC = () => {
     );
   };
 
+  // Migration logic for new default categories
+  useEffect(() => {
+    const hasOldCategories = categories.some(c => c.id === 'cold' || c.id === 'silly-google');
+    const hasNewCategories = categories.some(c => c.id === 'solo-date' || c.id === 'learn-new');
+
+    if (hasOldCategories || !hasNewCategories) {
+      const updatedCategories = categories.map(c => {
+        if (c.id === 'cold') return DEFAULT_CATEGORIES.find(dc => dc.id === 'solo-date') || c;
+        if (c.id === 'silly-google') return DEFAULT_CATEGORIES.find(dc => dc.id === 'cook-recipe') || c;
+        return c;
+      });
+
+      // Add "Learn Something New" if missing
+      if (!updatedCategories.some(c => c.id === 'learn-new')) {
+        const learnNew = DEFAULT_CATEGORIES.find(dc => dc.id === 'learn-new');
+        if (learnNew) updatedCategories.push(learnNew);
+      }
+
+      setCategories(updatedCategories);
+
+      // Migrating existing events to new IDs
+      setEvents(prev => prev.map(e => {
+        if (e.categoryId === 'cold') return { ...e, categoryId: 'solo-date' };
+        if (e.categoryId === 'silly-google') return { ...e, categoryId: 'cook-recipe' };
+        return e;
+      }));
+    }
+  }, []);
+
   return (
     <div className="container">
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '15px' }} className="app-header">

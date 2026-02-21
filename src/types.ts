@@ -18,9 +18,10 @@ export type DayData = {
 };
 
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'cold', name: 'Common Cold', color: '#ffafcc', icon: 'Thermometer' },
+  { id: 'solo-date', name: 'Solo Date', color: '#ffafcc', icon: 'Heart' },
   { id: 'rejection', name: 'Rejection', color: '#a2d2ff', icon: 'XCircle' },
-  { id: 'silly-google', name: 'Silly Google Search', color: '#ffd60a', icon: 'Search' },
-  { id: 'oops', name: 'Social Awkwardness', color: '#bdb2ff', icon: 'UserX' },
+  { id: 'learn-new', name: 'Learn Something New', color: '#bdb2ff', icon: 'Star' },
+  { id: 'cook-recipe', name: 'Cook New Recipe', color: '#ffd60a', icon: 'Coffee' },
+  { id: 'oops', name: 'Social Awkwardness', color: '#caffbf', icon: 'UserX' },
 ];
 
