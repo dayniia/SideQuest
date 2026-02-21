@@ -29,19 +29,39 @@ const Wrapped: React.FC<WrappedProps> = ({ events, categories, onClose, month })
         const peakDayIndex = Number(Object.entries(weekdayCounts).sort((a, b) => b[1] - a[1])[0][0]);
         const peakDayName = dayNames[peakDayIndex];
 
-        // 2. Most Chaotic Category
+        // 2. Peak Month (Yearly only)
+        let peakMonthName = '';
+        if (!month) {
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthCounts = filteredEvents.map(e => new Date(e.timestamp).getMonth())
+                .reduce((acc, m) => (acc[m] = (acc[m] || 0) + 1, acc), {} as Record<number, number>);
+            const peakMonthIndex = Number(Object.entries(monthCounts).sort((a, b) => b[1] - a[1])[0][0]);
+            peakMonthName = months[peakMonthIndex];
+        }
+
+        // 3. Most Chaotic Category
         const catCounts = filteredEvents.reduce((acc, e) => (acc[e.categoryId] = (acc[e.categoryId] || 0) + 1, acc), {} as Record<string, number>);
         const topCatId = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0][0];
         const topCat = categories.find(c => c.id === topCatId);
 
-        // 3. Random funny summary based on notes
+        // 4. Character Class Title (Yearly special)
+        const classTitles: Record<string, string> = {
+            'solo-date': 'The Romantic Main Character',
+            'rejection': 'The Resilience Master',
+            'learn-new': 'The Infinite Scholar',
+            'cook-recipe': 'The Culinary Pioneer',
+            'oops': 'The Social Alchemist',
+        };
+        const characterClass = topCat ? (classTitles[topCat.id] || 'The Unpredictable Adventurer') : 'The Newcomer';
+
+        // 5. Random funny summary based on notes
         const notes = filteredEvents.filter(e => e.note).map(e => e.note);
         const funnyVibe = notes.length > 0
             ? notes[Math.floor(Math.random() * notes.length)]
-            : "Absolutely nothing happened... and it was glorious.";
+            : "The quest log is silent... the next legendary chapter is still waiting to be written.";
 
-        return { peakDayName, topCat, funnyVibe, total: filteredEvents.length, catCounts };
-    }, [filteredEvents, categories]);
+        return { peakDayName, peakMonthName, topCat, characterClass, funnyVibe, total: filteredEvents.length, catCounts };
+    }, [filteredEvents, categories, month]);
 
     if (!stats) return (
         <div style={{ position: 'fixed', inset: 0, background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '40px', textAlign: 'center' }}>
@@ -55,11 +75,12 @@ const Wrapped: React.FC<WrappedProps> = ({ events, categories, onClose, month })
 
     const monthName = month ? format(month, 'MMMM') : 'this year';
 
-    const slides = [
+    const slides = month ? [
+        // MONTHLY SLIDES
         {
             bg: '#ffafcc',
             icon: 'Zap',
-            text: `Entry #${Math.floor(Math.random() * 9999)}`,
+            text: format(month, 'MMMM yyyy'),
             sub: `You survived ${monthName} with ${stats.total} total side-quests logged. Impressive.`
         },
         {
@@ -77,7 +98,7 @@ const Wrapped: React.FC<WrappedProps> = ({ events, categories, onClose, month })
         {
             bg: '#bdb2ff',
             icon: 'Smile',
-            text: `A highlight for the FBI agent watching you:`,
+            text: `A message for your future self:`,
             sub: `"${stats.funnyVibe}"`
         },
         {
@@ -86,6 +107,39 @@ const Wrapped: React.FC<WrappedProps> = ({ events, categories, onClose, month })
             icon: 'Moon',
             text: `Archive closed.`,
             sub: `Go do something you won't regret later (but definitely log it).`
+        }
+    ] : [
+        // YEARLY SLIDES
+        {
+            bg: '#ffafcc',
+            icon: 'Zap',
+            text: format(new Date(), 'yyyy'),
+            sub: `365 days. ${stats.total} side-quests. One incredible timeline.`
+        },
+        {
+            bg: '#caffbf',
+            icon: 'Sparkles',
+            text: `The Season of Chaos was ${stats.peakMonthName}.`,
+            sub: `That's when your quest log was overflowing.`
+        },
+        {
+            bg: '#ffd60a',
+            icon: 'Sword',
+            text: `Unlocked Class: ${stats.characterClass}.`,
+            sub: `Your dedication to "${stats.topCat?.name}" defined your year.`
+        },
+        {
+            bg: '#bdb2ff',
+            icon: 'Compass',
+            text: `A transmission to your future self from the past year:`,
+            sub: `"${stats.funnyVibe}"`
+        },
+        {
+            bg: '#1a1a1a',
+            textColor: '#fff',
+            icon: 'Moon',
+            text: `Yearly Archive closed.`,
+            sub: `Ready for Level ${Number(format(new Date(), 'yyyy')) + 1}?`
         }
     ];
 
