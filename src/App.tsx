@@ -191,7 +191,7 @@ const App: React.FC = () => {
             title="Download Android App"
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <Icons.Smartphone size={18} /> <span className="btn-text">APP</span>
+            <Icons.Smartphone size={18} /> <span className="btn-text">DOWNLOAD APP</span>
           </a>
           <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Download size={18} /> <span className="btn-text">Backup</span>
