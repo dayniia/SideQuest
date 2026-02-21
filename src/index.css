@@ -243,15 +243,6 @@ button:hover {
     gap: 10px;
   }
 
-  .categories-list {
-    justify-content: center;
-    margin-bottom: 15px;
-  }
-
-  .btn-text {
-    display: none;
-  }
-
   .calendar-grid,
   .calendar-grid-header {
     gap: 4px;
