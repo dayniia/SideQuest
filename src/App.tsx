@@ -4,6 +4,7 @@ import { format, isSameDay, eachDayOfInterval, startOfMonth, endOfMonth, startOf
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Icons from 'lucide-react';
 import { Download, Sparkles, Trash2, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import Wrapped from './Wrapped';
 import logo from './assets/logo.png';
 
@@ -183,16 +184,18 @@ const App: React.FC = () => {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '10px' }} className="header-actions">
-          <a
-            href="https://github.com/dayniia/SideQuest/releases/download/latest/app-debug.apk"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-secondary icon-only"
-            title="Download Android App"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <Icons.Smartphone size={18} /> <span className="btn-text">DOWNLOAD APP</span>
-          </a>
+          {!Capacitor.isNativePlatform() && (
+            <a
+              href="https://github.com/dayniia/SideQuest/releases/download/latest/app-debug.apk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary icon-only"
+              title="Download Android App"
+              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <Icons.Smartphone size={18} /> <span className="btn-text">DOWNLOAD APP</span>
+            </a>
+          )}
           <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Download size={18} /> <span className="btn-text">Backup</span>
           </button>
