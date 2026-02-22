@@ -7,6 +7,24 @@ SideQuest is a lo-fi, playful alternative to traditional productivity trackers. 
 
 ---
 
+# Mobile App (Android)
+
+SideQuest is now available as a native Android app! 🚀
+
+### Download the Latest APK
+1. Visit the [Latest Mobile Build](https://github.com/dayniia/SideQuest/releases/tag/latest) page on GitHub.
+2. Download the `app-debug.apk` file.
+3. Open the file on your phone to install it!
+
+### Download from the Web App
+1. Open [https://side-quest-delta.vercel.app/](https://side-quest-delta.vercel.app/).
+2. Click **Download App**.
+
+> [!TIP]
+> You may need to enable "Install from Unknown Sources" in your Android settings to install the APK.
+
+---
+
 ##  Key Features
 
 ###  The SideQuest Grid
@@ -34,19 +52,6 @@ Just like your favorite music app, get a personalized slide-show summary of your
 
 ---
 
-## 📱 Mobile App (Android)
-
-SideQuest is now available as a native Android app! 🚀
-
-### Download the Latest APK
-1. Visit the [Latest Mobile Build](https://github.com/dayniia/SideQuest/releases/tag/latest) page on GitHub.
-2. Download the `app-debug.apk` file.
-3. Open the file on your phone to install it!
-
-> [!TIP]
-> You may need to enable "Install from Unknown Sources" in your Android settings to install the APK.
-
----
 
 ##  Tech Stack
 

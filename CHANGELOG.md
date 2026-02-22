@@ -2,7 +2,7 @@
 
 All notable changes and improvements are documented below.
 
-## [1.1.1] - 2026-02-07
+## [1.2.0] - 2026-02-21
 
 ### Added
 - **Full Mobile Responsiveness**: Implemented a comprehensive mobile-first strategy across the entire application.
@@ -21,7 +21,7 @@ All notable changes and improvements are documented below.
 ### Fixed
 - Fixed JSX nesting and closing tag errors in `App.tsx` during layout refactoring.
 
-## [1.1.0] - 2026-01-30
+## [1.1.0] - 2026-02-16
 
 ### Added
 - **New Visual Identity**: Created a custom "SideQuest" icon featuring a playful compass and scroll.
