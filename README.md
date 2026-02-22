@@ -2,28 +2,34 @@
 
 **Tracking the beautifully unhinged side-quests of your daily life.**
 
-SideQuest is a lo-fi, playful alternative to traditional productivity trackers. Instead of logging tasks or habits, it's designed for the messy, silly, and human moments—the "side-quests" you didn't plan for, like every time you try a new recipe, have a social "oops," or learn something truly bizarre on Google.
+SideQuest is a lo-fi, playful alternative to traditional productivity trackers.
+In a world increasingly optimized by AI and productivity systems, SideQuest imagines a future where we begin tracking what actually makes us human.
 
+Instead of logging tasks, habits, or KPIs, it's designed for the messy, silly, and human moments—the "side-quests" you didn't plan for, like every time you try a new recipe, have a social "oops," or learn something truly bizarre on Google.
+
+
+🌍 The Problem
+
+The future is automated.
+
+Calendars are smart.
+To-do lists are AI-generated.
+Habits are optimized.
+
+But what about:
+
+The first time you burn a new recipe?
+
+The awkward social “oops” that becomes a core memory?
+
+The random 2AM Google search that reshapes your worldview?
+
+These moments shape identity — yet they go untracked.
+
+SideQuest explores a future where we preserve human randomness in an optimized world.
 
 ---
 
-# Mobile App (Android)
-
-SideQuest is now available as a native Android app! 🚀
-
-### Download the Latest APK
-1. Visit the [Latest Mobile Build](https://github.com/dayniia/SideQuest/releases/tag/latest) page on GitHub.
-2. Download the `app-debug.apk` file.
-3. Open the file on your phone to install it!
-
-### Download from the Web App
-1. Open [https://side-quest-delta.vercel.app/](https://side-quest-delta.vercel.app/).
-2. Click **Download App**.
-
-> [!TIP]
-> You may need to enable "Install from Unknown Sources" in your Android settings to install the APK.
-
----
 
 ##  Key Features
 
@@ -52,7 +58,23 @@ Just like your favorite music app, get a personalized slide-show summary of your
 
 ---
 
+# Mobile App (Android)
 
+SideQuest is now available as a native Android app! 🚀
+
+### Download the Latest APK
+1. Visit the [Latest Mobile Build](https://github.com/dayniia/SideQuest/releases/tag/latest) page on GitHub.
+2. Download the `app-debug.apk` file.
+3. Open the file on your phone to install it!
+
+### Download from the Web App
+1. Open [https://side-quest-delta.vercel.app/](https://side-quest-delta.vercel.app/).
+2. Click **Download App**.
+
+> [!TIP]
+> You may need to enable "Install from Unknown Sources" in your Android settings to install the APK.
+
+---
 ##  Tech Stack
 
 - **Framework**: [React 19](https://react.dev/) + [Vite](https://vitejs.dev/)
