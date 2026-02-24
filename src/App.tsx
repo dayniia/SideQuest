@@ -43,6 +43,7 @@ const App: React.FC = () => {
   const [newCatIcon, setNewCatIcon] = useState('Circle');
   const [showConfirm, setShowConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const isNative = useMemo(() => Capacitor.isNativePlatform(), []);
 
   const QUEST_ICONS = ['Circle', 'Heart', 'Star', 'Ghost', 'Coffee', 'Zap', 'Moon', 'Sun', 'Cloud', 'Trash2', 'Smile', 'Frown', 'Dizzy', 'Bomb', 'Flame'];
 
@@ -218,7 +219,7 @@ const App: React.FC = () => {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '10px' }} className="header-actions">
-          {!Capacitor.isNativePlatform() && (
+          {!isNative && (
             <a
               href="https://github.com/dayniia/SideQuest/releases/download/latest/app-debug.apk"
               target="_blank"
@@ -242,6 +243,21 @@ const App: React.FC = () => {
           </motion.button>
         </div>
       </header>
+
+      {!isNative && (
+        <div className="mobile-download-banner">
+          <a
+            href="https://github.com/dayniia/SideQuest/releases/download/latest/app-debug.apk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary icon-only"
+            title="Download Android App"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}
+          >
+            <Icons.Smartphone size={18} /> <span className="btn-text">DOWNLOAD APP</span>
+          </a>
+        </div>
+      )}
 
       <AnimatePresence>
         {showWrapped && (
