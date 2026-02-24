@@ -3,10 +3,21 @@ import { type Category, type TrackerEvent, DEFAULT_CATEGORIES } from './types';
 import { format, isSameDay, eachDayOfInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, isSameMonth } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Icons from 'lucide-react';
-import { Download, Sparkles, Trash2, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, Trash2, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+
+// Helper: fire haptics only on native — silently no-ops on web
+const haptic = {
+  light: () => Capacitor.isNativePlatform() && Haptics.impact({ style: ImpactStyle.Light }),
+  medium: () => Capacitor.isNativePlatform() && Haptics.impact({ style: ImpactStyle.Medium }),
+  success: () => Capacitor.isNativePlatform() && Haptics.notification({ type: NotificationType.Success }),
+};
 import Wrapped from './Wrapped';
 import logo from './assets/logo.png';
+import BottomNav, { type Tab } from './components/BottomNav';
+import StatsTab from './components/StatsTab';
+import SettingsTab from './components/SettingsTab';
 
 const App: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>(() => {
@@ -19,6 +30,7 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [activeTab, setActiveTab] = useState<Tab>('calendar');
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newNote, setNewNote] = useState('');
@@ -50,21 +62,37 @@ const App: React.FC = () => {
     return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   }, [currentDate]);
 
+  // Check if today has been logged (to control FAB pulse)
+  const todayLogged = useMemo(() =>
+    events.some(e => isSameDay(new Date(e.timestamp), new Date())),
+    [events]
+  );
+
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+
+  const openDayModal = (day: Date) => {
+    setSelectedDay(day);
+    setSelectedCatIds([]);
+    setShowAddModal(true);
+  };
+
+  const openTodayModal = () => {
+    openDayModal(new Date());
+    setActiveTab('calendar');
+  };
 
   const addEvent = () => {
     if (!selectedDay || selectedCatIds.length === 0) return;
     const timestamp = selectedDay.getTime();
-
     const newEvents: TrackerEvent[] = selectedCatIds.map(catId => ({
       id: Math.random().toString(36).substring(2, 11),
       categoryId: catId,
       timestamp,
       note: newNote.trim() || undefined
     }));
-
     setEvents(prev => [...prev, ...newEvents]);
+    haptic.medium(); // feel the quest being logged
     setNewNote('');
     setSelectedCatIds([]);
     setShowAddModal(false);
@@ -75,6 +103,7 @@ const App: React.FC = () => {
       message: 'Delete this logged side-quest?',
       onConfirm: () => {
         setEvents(prev => prev.filter(e => e.id !== id));
+        haptic.success();
         setShowConfirm(null);
       }
     });
@@ -112,16 +141,13 @@ const App: React.FC = () => {
     }
     const uniqueCats = Array.from(new Set(dayEvents.map(e => e.categoryId)));
     const catColors = uniqueCats.map(cid => categories.find(c => c.id === cid)?.color || '#eee');
-    if (catColors.length === 2) {
-      return `linear-gradient(45deg, ${catColors[0]} 50%, ${catColors[1]} 50%)`;
-    }
+    if (catColors.length === 2) return `linear-gradient(45deg, ${catColors[0]} 50%, ${catColors[1]} 50%)`;
     const step = 100 / catColors.length;
     let gradient = `conic-gradient(`;
     catColors.forEach((color, i) => {
       gradient += `${color} ${i * step}% ${(i + 1) * step}%${i === catColors.length - 1 ? '' : ','}`;
     });
-    gradient += `)`;
-    return gradient;
+    return gradient + ')';
   };
 
   const handleDownload = () => {
@@ -134,11 +160,24 @@ const App: React.FC = () => {
     a.click();
   };
 
+  const handleImport = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        if (data.categories) setCategories(data.categories);
+        if (data.events) setEvents(data.events);
+      } catch {
+        alert('Invalid backup file.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const toggleCategory = (catId: string) => {
+    haptic.light(); // subtle tick on each tap
     setSelectedCatIds(prev =>
-      prev.includes(catId)
-        ? prev.filter(id => id !== catId)
-        : [...prev, catId]
+      prev.includes(catId) ? prev.filter(id => id !== catId) : [...prev, catId]
     );
   };
 
@@ -146,23 +185,17 @@ const App: React.FC = () => {
   useEffect(() => {
     const hasOldCategories = categories.some(c => c.id === 'cold' || c.id === 'silly-google');
     const hasNewCategories = categories.some(c => c.id === 'solo-date' || c.id === 'learn-new');
-
     if (hasOldCategories || !hasNewCategories) {
       const updatedCategories = categories.map(c => {
         if (c.id === 'cold') return DEFAULT_CATEGORIES.find(dc => dc.id === 'solo-date') || c;
         if (c.id === 'silly-google') return DEFAULT_CATEGORIES.find(dc => dc.id === 'cook-recipe') || c;
         return c;
       });
-
-      // Add "Learn Something New" if missing
       if (!updatedCategories.some(c => c.id === 'learn-new')) {
         const learnNew = DEFAULT_CATEGORIES.find(dc => dc.id === 'learn-new');
         if (learnNew) updatedCategories.push(learnNew);
       }
-
       setCategories(updatedCategories);
-
-      // Migrating existing events to new IDs
       setEvents(prev => prev.map(e => {
         if (e.categoryId === 'cold') return { ...e, categoryId: 'solo-date' };
         if (e.categoryId === 'silly-google') return { ...e, categoryId: 'cook-recipe' };
@@ -173,6 +206,7 @@ const App: React.FC = () => {
 
   return (
     <div className="container">
+      {/* ── Desktop header (hidden on mobile via CSS) ── */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '15px' }} className="app-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }} className="logo-section">
           <img src={logo} alt="SideQuest Logo" style={{ width: '60px', height: '60px', borderRadius: '12px', border: '2px solid var(--border)', boxShadow: 'var(--shadow)', objectFit: 'cover' }} />
@@ -197,11 +231,10 @@ const App: React.FC = () => {
             </a>
           )}
           <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Download size={18} /> <span className="btn-text">Backup</span>
+            <Icons.Download size={18} /> <span className="btn-text">Backup</span>
           </button>
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             onClick={() => { setIsMonthlyWrapped(false); setShowWrapped(true); }}
             style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--yellow)' }}
           >
@@ -221,234 +254,290 @@ const App: React.FC = () => {
         )}
       </AnimatePresence>
 
+      {/* ── Page content switched by active tab ── */}
       <main>
-        <div className="card" style={{ marginBottom: '24px' }}>
-          <div className="calendar-controls">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
-              <button onClick={prevMonth} style={{ padding: '6px' }}><ChevronLeft size={18} /></button>
-              <h2 style={{ fontSize: '1.4rem', minWidth: '150px', textAlign: 'center' }}>{format(currentDate, 'MMMM yyyy')}</h2>
-              <button onClick={nextMonth} style={{ padding: '6px' }}><ChevronRight size={18} /></button>
-            </div>
-            <button
-              onClick={() => { setIsMonthlyWrapped(true); setShowWrapped(true); }}
-              className="monthly-wrapped-btn"
-              style={{ background: 'var(--purple)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}
+        <AnimatePresence mode="wait">
+          {activeTab === 'calendar' && (
+            <motion.div
+              key="calendar"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18 }}
             >
-              <Sparkles size={14} /> <span className="btn-text">Monthly Wrapped</span>
-            </button>
-          </div>
-          <div className="categories-list">
-            {categories.map(cat => {
-              const IconComponent = (Icons as any)[cat.icon || 'Circle'];
-              return (
-                <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', background: cat.color + '33', padding: '3px 8px', borderRadius: '15px', border: `2px solid ${cat.color}` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {IconComponent && <IconComponent size={10} />}
-                    {cat.name}
+              <div className="card" style={{ marginBottom: '24px' }}>
+                <div className="calendar-controls">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
+                    <button onClick={prevMonth} style={{ padding: '6px' }}><ChevronLeft size={18} /></button>
+                    <h2 style={{ fontSize: '1.4rem', minWidth: '150px', textAlign: 'center' }}>{format(currentDate, 'MMMM yyyy')}</h2>
+                    <button onClick={nextMonth} style={{ padding: '6px' }}><ChevronRight size={18} /></button>
                   </div>
                   <button
-                    onClick={() => deleteCategory(cat.id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '2px',
-                      background: 'rgba(255,255,255,0.5)',
-                      borderRadius: '50%',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: '#666'
-                    }}
+                    onClick={() => { setIsMonthlyWrapped(true); setShowWrapped(true); }}
+                    className="monthly-wrapped-btn"
+                    style={{ background: 'var(--purple)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}
                   >
-                    <Trash2 size={10} />
+                    <Sparkles size={14} /> <span className="btn-text">Monthly Wrapped</span>
                   </button>
                 </div>
-              );
-            })}
-            <button
-              onClick={() => setShowCatModal(true)}
-              style={{ padding: '3px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-            >
-              <Plus size={12} /> New
-            </button>
-          </div>
 
-          <div className="calendar-grid-header">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-              <div key={day} className="weekday-label">{day}</div>
-            ))}
-          </div>
-
-          <div className="calendar-grid">
-            {calendarDays.map((day, i) => {
-              const dayEvents = events.filter(e => isSameDay(new Date(e.timestamp), day));
-              const isCurrentMonth = isSameMonth(day, currentDate);
-              const isToday = isSameDay(day, new Date());
-              return (
-                <motion.div
-                  key={i}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => { setSelectedDay(day); setShowAddModal(true); setSelectedCatIds([]); }}
-                  className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}`}
-                  style={{ background: getDayColor(day) }}
-                >
-                  <span style={{ fontSize: '0.85rem', fontWeight: '900' }}>{format(day, 'd')}</span>
-                  {dayEvents.length > 0 && (
-                    <div className="event-dots">
-                      {dayEvents.slice(0, 4).map((e) => (
-                        <div key={e.id} className="event-dot" style={{ background: categories.find(c => c.id === e.categoryId)?.color || 'black' }} />
-                      ))}
-                    </div>
-                  )}
-                  {dayEvents.length > 0 && (
-                    <div className="day-tooltip">
-                      {dayEvents.length} side-quest{dayEvents.length > 1 ? 's' : ''}
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
-        <AnimatePresence>
-          {showAddModal && selectedDay && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}
-              onClick={() => setShowAddModal(false)}
-            >
-              <motion.div
-                initial={{ y: 20, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }}
-                className="card" style={{ width: '100%', maxWidth: '500px', cursor: 'default' }}
-                onClick={e => e.stopPropagation()}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
-                  <h3 style={{ fontSize: '1.5rem' }}>{format(selectedDay, 'MMMM do, yyyy')}</h3>
-                  <button onClick={() => setShowAddModal(false)} style={{ padding: '4px 12px', fontSize: '1.2rem' }}>&times;</button>
-                </div>
-                <div style={{ marginBottom: '25px' }}>
-                  <h4 style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Logged Side-Quests</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {events.filter(e => isSameDay(new Date(e.timestamp), selectedDay)).length === 0 && (
-                      <p style={{ fontStyle: 'italic', fontSize: '0.9rem', opacity: 0.5, padding: '15px', textAlign: 'center', border: '2px dashed #ddd', borderRadius: '8px' }}>Quiet day...</p>
-                    )}
-                    {events.filter(e => isSameDay(new Date(e.timestamp), selectedDay)).map(event => {
-                      const cat = categories.find(c => c.id === event.categoryId);
-                      return (
-                        <div key={event.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', border: '2px solid var(--border)', borderRadius: '10px', background: cat?.color || '#eee', boxShadow: '2px 2px 0px var(--border)' }}>
-                          <div><span style={{ fontWeight: 'bold' }}>{cat?.name}</span>{event.note && <p style={{ fontSize: '0.85rem' }}>"{event.note}"</p>}</div>
-                          <button onClick={() => deleteEvent(event.id)} style={{ padding: '6px', border: 'none', background: 'white', borderRadius: '6px' }}><Trash2 size={16} color="#ff4d4d" /></button>
+                <div className="categories-list">
+                  {categories.map(cat => {
+                    const IconComponent = (Icons as any)[cat.icon || 'Circle'];
+                    return (
+                      <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', background: cat.color + '33', padding: '3px 8px', borderRadius: '15px', border: `2px solid ${cat.color}` }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {IconComponent && <IconComponent size={10} />}
+                          {cat.name}
                         </div>
-                      );
-                    })}
-                  </div>
+                        <button
+                          onClick={() => deleteCategory(cat.id)}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2px', background: 'rgba(255,255,255,0.5)', borderRadius: '50%', border: 'none', cursor: 'pointer', color: '#666' }}
+                        >
+                          <Trash2 size={10} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                  <button onClick={() => setShowCatModal(true)} style={{ padding: '3px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Plus size={12} /> New
+                  </button>
                 </div>
-                <div style={{ borderTop: '2px solid #eee', paddingTop: '20px' }}>
-                  <h4 style={{ marginBottom: '15px' }}>Log New Quest(s)</h4>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '15px' }}>
-                    {categories.map(cat => (
-                      <button
-                        key={cat.id}
-                        onClick={() => toggleCategory(cat.id)}
-                        style={{
-                          background: selectedCatIds.includes(cat.id) ? cat.color : 'white',
-                          fontSize: '0.85rem',
-                          border: selectedCatIds.includes(cat.id) ? '2px solid black' : '2px solid var(--border)'
-                        }}
+
+                <div className="calendar-grid-header">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                    <div key={day} className="weekday-label">{day}</div>
+                  ))}
+                </div>
+                <div className="calendar-grid">
+                  {calendarDays.map((day, i) => {
+                    const dayEvents = events.filter(e => isSameDay(new Date(e.timestamp), day));
+                    const isCurrentMonth = isSameMonth(day, currentDate);
+                    const isToday = isSameDay(day, new Date());
+                    return (
+                      <motion.div
+                        key={i}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => openDayModal(day)}
+                        className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}`}
+                        style={{ background: getDayColor(day) }}
                       >
-                        {cat.name}
-                      </button>
-                    ))}
+                        <span style={{ fontSize: '0.85rem', fontWeight: '900' }}>{format(day, 'd')}</span>
+                        {dayEvents.length > 0 && (
+                          <div className="event-dots">
+                            {dayEvents.slice(0, 4).map((e) => (
+                              <div key={e.id} className="event-dot" style={{ background: categories.find(c => c.id === e.categoryId)?.color || 'black' }} />
+                            ))}
+                          </div>
+                        )}
+                        {dayEvents.length > 0 && (
+                          <div className="day-tooltip">
+                            {dayEvents.length} side-quest{dayEvents.length > 1 ? 's' : ''}
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'stats' && (
+            <motion.div
+              key="stats"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18 }}
+            >
+              <StatsTab
+                events={events}
+                categories={categories}
+                currentDate={currentDate}
+                onMonthlyWrapped={() => { setIsMonthlyWrapped(true); setShowWrapped(true); }}
+                onYearlyWrapped={() => { setIsMonthlyWrapped(false); setShowWrapped(true); }}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === 'settings' && (
+            <motion.div
+              key="settings"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18 }}
+            >
+              <SettingsTab onDownload={handleDownload} onImport={handleImport} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      {/* ── FAB: log today ── */}
+      <AnimatePresence>
+        {activeTab === 'calendar' && (
+          <motion.button
+            key="fab"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+            className={`fab ${!todayLogged ? 'pulse' : ''}`}
+            onClick={openTodayModal}
+            title="Log Today's Quest"
+          >
+            <Plus size={26} color="#1a1a1a" strokeWidth={2.5} />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* ── Bottom Tab Bar ── */}
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* ── Day Log Modal (Bottom Sheet) ── */}
+      <AnimatePresence>
+        {showAddModal && selectedDay && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="bottom-sheet-overlay"
+            onClick={() => setShowAddModal(false)}
+          >
+            <motion.div
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+              className="bottom-sheet"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="sheet-handle" />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '1.5rem' }}>{format(selectedDay, 'MMMM do, yyyy')}</h3>
+                <button onClick={() => setShowAddModal(false)} style={{ padding: '4px 12px', fontSize: '1.2rem' }}>&times;</button>
+              </div>
+              <div style={{ marginBottom: '25px' }}>
+                <h4 style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Logged Side-Quests</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {events.filter(e => isSameDay(new Date(e.timestamp), selectedDay)).length === 0 && (
+                    <p style={{ fontStyle: 'italic', fontSize: '0.9rem', opacity: 0.5, padding: '15px', textAlign: 'center', border: '2px dashed #ddd', borderRadius: '8px' }}>Quiet day...</p>
+                  )}
+                  {events.filter(e => isSameDay(new Date(e.timestamp), selectedDay)).map(event => {
+                    const cat = categories.find(c => c.id === event.categoryId);
+                    return (
+                      <div key={event.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', border: '2px solid var(--border)', borderRadius: '10px', background: cat?.color || '#eee', boxShadow: '2px 2px 0px var(--border)' }}>
+                        <div><span style={{ fontWeight: 'bold' }}>{cat?.name}</span>{event.note && <p style={{ fontSize: '0.85rem' }}>"{event.note}"</p>}</div>
+                        <button onClick={() => deleteEvent(event.id)} style={{ padding: '6px', border: 'none', background: 'white', borderRadius: '6px' }}><Trash2 size={16} color="#ff4d4d" /></button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div style={{ borderTop: '2px solid #eee', paddingTop: '20px' }}>
+                <h4 style={{ marginBottom: '15px' }}>Log New Quest(s)</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '15px' }}>
+                  {categories.map(cat => (
                     <button
-                      onClick={() => setShowCatModal(true)}
+                      key={cat.id}
+                      onClick={() => toggleCategory(cat.id)}
                       style={{
+                        background: selectedCatIds.includes(cat.id) ? cat.color : 'white',
                         fontSize: '0.85rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        background: 'transparent',
-                        border: '2px dashed var(--border)'
+                        border: selectedCatIds.includes(cat.id) ? '2px solid black' : '2px solid var(--border)'
                       }}
                     >
-                      <Plus size={14} /> New
+                      {cat.name}
                     </button>
-                  </div>
-                  <textarea value={newNote} onChange={e => setNewNote(e.target.value)} style={{ width: '100%', height: '80px', borderRadius: '10px', border: '2px solid var(--border)', padding: '12px', marginBottom: '15px', fontFamily: 'inherit' }} placeholder="Add a note for these quests..." />
-                  <button onClick={addEvent} disabled={selectedCatIds.length === 0} style={{ width: '100%', background: selectedCatIds.length > 0 ? 'black' : '#ccc', color: 'white', padding: '12px', fontWeight: 'bold' }}>LOG {selectedCatIds.length > 0 ? (selectedCatIds.length > 1 ? `${selectedCatIds.length} QUESTS` : 'QUEST') : 'QUEST'}!</button>
+                  ))}
+                  <button
+                    onClick={() => setShowCatModal(true)}
+                    style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', background: 'transparent', border: '2px dashed var(--border)' }}
+                  >
+                    <Plus size={14} /> New
+                  </button>
                 </div>
-              </motion.div>
+                <textarea
+                  value={newNote}
+                  onChange={e => setNewNote(e.target.value)}
+                  style={{ width: '100%', height: '80px', borderRadius: '10px', border: '2px solid var(--border)', padding: '12px', marginBottom: '15px', fontFamily: 'inherit' }}
+                  placeholder="Add a note for these quests..."
+                />
+                <button
+                  onClick={addEvent}
+                  disabled={selectedCatIds.length === 0}
+                  style={{ width: '100%', background: selectedCatIds.length > 0 ? 'black' : '#ccc', color: 'white', padding: '12px', fontWeight: 'bold' }}
+                >
+                  LOG {selectedCatIds.length > 0 ? (selectedCatIds.length > 1 ? `${selectedCatIds.length} QUESTS` : 'QUEST') : 'QUEST'}!
+                </button>
+              </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <AnimatePresence>
-          {showCatModal && (
+      {/* ── Add Category Modal (centered, smaller) ── */}
+      <AnimatePresence>
+        {showCatModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px' }}
+            onClick={() => setShowCatModal(false)}
+          >
             <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}
-              onClick={() => setShowCatModal(false)}
+              initial={{ y: 20, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }}
+              className="card" style={{ width: '100%', maxWidth: '450px', cursor: 'default' }}
+              onClick={e => e.stopPropagation()}
             >
-              <motion.div
-                initial={{ y: 20, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }}
-                className="card" style={{ width: '100%', maxWidth: '450px', cursor: 'default' }}
-                onClick={e => e.stopPropagation()}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
-                  <h3>New Category</h3>
-                  <button onClick={() => setShowCatModal(false)}>&times;</button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+                <h3>New Category</h3>
+                <button onClick={() => setShowCatModal(false)}>&times;</button>
+              </div>
+              <input type="text" value={newCatName} onChange={e => setNewCatName(e.target.value)} placeholder="Category Name" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid var(--border)', marginBottom: '20px' }} />
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {['#ffafcc', '#a2d2ff', '#ffd60a', '#caffbf', '#bdb2ff', '#ff9f1c', '#2ec4b6'].map(color => (
+                    <div key={color} onClick={() => setNewCatColor(color)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: color, border: '2px solid var(--border)', cursor: 'pointer', transform: newCatColor === color ? 'translate(-2px, -2px)' : 'none' }} />
+                  ))}
                 </div>
-                <input type="text" value={newCatName} onChange={e => setNewCatName(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid var(--border)', marginBottom: '20px' }} />
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {['#ffafcc', '#a2d2ff', '#ffd60a', '#caffbf', '#bdb2ff', '#ff9f1c', '#2ec4b6'].map(color => (
-                      <div key={color} onClick={() => setNewCatColor(color)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: color, border: '2px solid var(--border)', cursor: 'pointer', transform: newCatColor === color ? 'translate(-2px, -2px)' : 'none' }} />
-                    ))}
-                  </div>
+              </div>
+              <div style={{ marginBottom: '25px', background: '#f5f5f5', padding: '12px', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {QUEST_ICONS.map(iconName => {
+                    const IconComp = (Icons as any)[iconName];
+                    return <div key={iconName} onClick={() => setNewCatIcon(iconName)} style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: newCatIcon === iconName ? 'black' : 'white', color: newCatIcon === iconName ? 'white' : 'black', border: '2px solid var(--border)', cursor: 'pointer' }}>{IconComp && <IconComp size={18} />}</div>;
+                  })}
                 </div>
-                <div style={{ marginBottom: '25px', background: '#f5f5f5', padding: '12px', borderRadius: '12px' }}>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {QUEST_ICONS.map(iconName => {
-                      const IconComp = (Icons as any)[iconName];
-                      return <div key={iconName} onClick={() => setNewCatIcon(iconName)} style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: newCatIcon === iconName ? 'black' : 'white', color: newCatIcon === iconName ? 'white' : 'black', border: '2px solid var(--border)', cursor: 'pointer' }}>{IconComp && <IconComp size={18} />}</div>;
-                    })}
-                  </div>
-                </div>
-                <button onClick={addCategory} style={{ width: '100%', background: 'black', color: 'white', padding: '12px', fontWeight: 'bold' }}>CREATE</button>
-              </motion.div>
+              </div>
+              <button onClick={addCategory} style={{ width: '100%', background: 'black', color: 'white', padding: '12px', fontWeight: 'bold' }}>CREATE</button>
             </motion.div>
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {showConfirm && (
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Confirm Delete Modal ── */}
+      <AnimatePresence>
+        {showConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '20px', backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowConfirm(null)}
+          >
             <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px', backdropFilter: 'blur(4px)' }}
-              onClick={() => setShowConfirm(null)}
+              initial={{ y: 20, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }}
+              className="card" style={{ width: '100%', maxWidth: '400px', cursor: 'default', textAlign: 'center' }}
+              onClick={e => e.stopPropagation()}
             >
-              <motion.div
-                initial={{ y: 20, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }}
-                className="card" style={{ width: '100%', maxWidth: '400px', cursor: 'default', textAlign: 'center' }}
-                onClick={e => e.stopPropagation()}
-              >
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ width: '60px', height: '60px', background: '#fff5f5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px' }}>
-                    <Trash2 size={30} color="#ff4d4d" />
-                  </div>
-                  <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Are you sure?</h3>
-                  <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>{showConfirm.message}</p>
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ width: '60px', height: '60px', background: '#fff5f5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px' }}>
+                  <Trash2 size={30} color="#ff4d4d" />
                 </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={() => setShowConfirm(null)} style={{ flex: 1, background: '#eee', color: 'black' }}>Cancel</button>
-                  <button onClick={showConfirm.onConfirm} style={{ flex: 1, background: '#ff4d4d', color: 'white', fontWeight: 'bold' }}>Delete</button>
-                </div>
-              </motion.div>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Are you sure?</h3>
+                <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>{showConfirm.message}</p>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={() => setShowConfirm(null)} style={{ flex: 1, background: '#eee', color: 'black' }}>Cancel</button>
+                <button onClick={showConfirm.onConfirm} style={{ flex: 1, background: '#ff4d4d', color: 'white', fontWeight: 'bold' }}>Delete</button>
+              </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </main >
-    </div >
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 

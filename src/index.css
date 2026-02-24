@@ -279,3 +279,344 @@ button:hover {
     display: none !important;
   }
 }
+
+/* ─── Bottom Nav ───────────────────────────────────────────── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--card-bg);
+  border-top: 2px solid var(--border);
+  display: flex;
+  align-items: stretch;
+  box-shadow: 0 -3px 0px var(--border);
+  z-index: 900;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0;
+  padding: 8px 0;
+  position: relative;
+  cursor: pointer;
+  color: var(--text);
+  opacity: 0.45;
+  transition: opacity 0.15s ease;
+}
+
+.bottom-nav-tab:hover {
+  animation: none;
+  filter: none;
+  opacity: 0.65;
+  transform: none;
+}
+
+.bottom-nav-tab:active {
+  transform: none;
+  box-shadow: none;
+}
+
+.bottom-nav-tab.active {
+  opacity: 1;
+  color: #5c4adb;
+}
+
+.bottom-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.bottom-nav-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  position: relative;
+  z-index: 1;
+}
+
+.bottom-nav-pill {
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background: #5c4adb;
+  border-radius: 3px 3px 0 0;
+}
+
+/* ─── FAB ──────────────────────────────────────────────────── */
+.fab {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50% !important;
+  background: var(--purple) !important;
+  color: #1a1a1a;
+  border: 2px solid var(--border) !important;
+  box-shadow: 4px 4px 0px var(--border) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 800;
+  font-size: 1.6rem;
+  font-weight: 300;
+  padding: 0;
+}
+
+.fab:hover {
+  animation: none;
+  filter: none;
+  box-shadow: 5px 5px 0px var(--border) !important;
+}
+
+.fab:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--border) !important;
+}
+
+@keyframes fab-pulse {
+
+  0%,
+  100% {
+    box-shadow: 4px 4px 0px var(--border), 0 0 0 0 rgba(92, 74, 219, 0.45);
+  }
+
+  50% {
+    box-shadow: 4px 4px 0px var(--border), 0 0 0 8px rgba(92, 74, 219, 0);
+  }
+}
+
+.fab.pulse {
+  animation: fab-pulse 2s ease-in-out infinite;
+}
+
+/* ─── Bottom Sheet Modal ───────────────────────────────────── */
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.bottom-sheet {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 0px var(--border);
+  overflow-y: auto;
+  cursor: default;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  margin: 0 auto 16px;
+  opacity: 0.25;
+}
+
+/* ─── container padding for bottom nav ────────────────────── */
+.container {
+  padding-bottom: 80px;
+}
+
+/* ─── Stats Tab ────────────────────────────────────────────── */
+.stats-tab {
+  padding-top: 8px;
+}
+
+.stats-title {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px !important;
+  text-align: center;
+}
+
+.stat-icon {
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-unit {
+  font-size: 0.7rem;
+  opacity: 0.55;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.top-cat-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px !important;
+}
+
+.top-cat-label {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.top-cat-name {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 2px solid var(--border);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.wrapped-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.wrapped-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* ─── Settings Tab ─────────────────────────────────────────── */
+.settings-tab {
+  padding-top: 8px;
+}
+
+.settings-group {
+  margin-bottom: 24px;
+}
+
+.settings-group-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.5;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 12px !important;
+}
+
+.settings-row-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-row-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.settings-row-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.settings-row-desc {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  line-height: 1.3;
+}
+
+.settings-action-btn {
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.app-version-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.4;
+  font-size: 0.8rem;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+/* ─── header: hide on mobile when bottom nav present ──────── */
+@media (max-width: 650px) {
+  .app-header {
+    display: none !important;
+  }
+
+  .mobile-page-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+}
