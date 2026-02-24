@@ -233,7 +233,7 @@ const App: React.FC = () => {
             </a>
           )}
           {showHeaderUtilityButtons && (
-            <>
+            <div className="header-utility-buttons">
               <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Icons.Download size={18} /> <span className="btn-text">Backup</span>
               </button>
@@ -244,7 +244,7 @@ const App: React.FC = () => {
               >
                 <Sparkles size={18} /> <span className="btn-text">Yearly Wrapped</span>
               </motion.button>
-            </>
+            </div>
           )}
         </div>
       </header>
