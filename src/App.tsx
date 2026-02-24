@@ -44,6 +44,7 @@ const App: React.FC = () => {
   const [showConfirm, setShowConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const isNative = useMemo(() => Capacitor.isNativePlatform(), []);
+  const showHeaderUtilityButtons = isNative || activeTab === 'calendar';
 
   const QUEST_ICONS = ['Circle', 'Heart', 'Star', 'Ghost', 'Coffee', 'Zap', 'Moon', 'Sun', 'Cloud', 'Trash2', 'Smile', 'Frown', 'Dizzy', 'Bomb', 'Flame'];
 
@@ -231,16 +232,20 @@ const App: React.FC = () => {
               <Icons.Smartphone size={18} /> <span className="btn-text">DOWNLOAD APP</span>
             </a>
           )}
-          <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Icons.Download size={18} /> <span className="btn-text">Backup</span>
-          </button>
-          <motion.button
-            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-            onClick={() => { setIsMonthlyWrapped(false); setShowWrapped(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--yellow)' }}
-          >
-            <Sparkles size={18} /> <span className="btn-text">Yearly Wrapped</span>
-          </motion.button>
+          {showHeaderUtilityButtons && (
+            <>
+              <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Icons.Download size={18} /> <span className="btn-text">Backup</span>
+              </button>
+              <motion.button
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                onClick={() => { setIsMonthlyWrapped(false); setShowWrapped(true); }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--yellow)' }}
+              >
+                <Sparkles size={18} /> <span className="btn-text">Yearly Wrapped</span>
+              </motion.button>
+            </>
+          )}
         </div>
       </header>
 
