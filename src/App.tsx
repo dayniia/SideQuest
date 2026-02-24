@@ -208,47 +208,46 @@ const App: React.FC = () => {
 
   return (
     <div className="container">
-      {!isNative && (
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '15px' }} className="app-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }} className="logo-section">
-            <img src={logo} alt="SideQuest Logo" style={{ width: '60px', height: '60px', borderRadius: '12px', border: '2px solid var(--border)', boxShadow: 'var(--shadow)', objectFit: 'cover' }} />
-            <div>
-              <h1 style={{ fontSize: '2.2rem', marginBottom: '0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                SideQuest <Sparkles className="sparkle-icon" size={24} />
-              </h1>
-              <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>Tracking the beautifully unhinged side-quests</p>
-            </div>
+      {/* ── Desktop header (hidden on mobile via CSS) ── */}
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '15px' }} className="app-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }} className="logo-section">
+          <img src={logo} alt="SideQuest Logo" style={{ width: '60px', height: '60px', borderRadius: '12px', border: '2px solid var(--border)', boxShadow: 'var(--shadow)', objectFit: 'cover' }} />
+          <div>
+            <h1 style={{ fontSize: '2.2rem', marginBottom: '0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              SideQuest <Sparkles className="sparkle-icon" size={24} />
+            </h1>
+            <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>Tracking the beautifully unhinged side-quests</p>
           </div>
-          <div style={{ display: 'flex', gap: '10px' }} className="header-actions">
-            {!isNative && (
-              <a
-                href="https://github.com/dayniia/SideQuest/releases/download/latest/app-debug.apk"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-secondary icon-only header-download-link"
-                title="Download Android App"
-                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        </div>
+        <div style={{ display: 'flex', gap: '10px' }} className="header-actions">
+          {!isNative && (
+            <a
+              href="https://github.com/dayniia/SideQuest/releases/download/latest/app-debug.apk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary icon-only header-download-link"
+              title="Download Android App"
+              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <Icons.Smartphone size={18} /> <span className="btn-text">DOWNLOAD APP</span>
+            </a>
+          )}
+          {showHeaderUtilityButtons && (
+            <div className="header-utility-buttons">
+              <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Icons.Download size={18} /> <span className="btn-text">Backup</span>
+              </button>
+              <motion.button
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                onClick={() => { setIsMonthlyWrapped(false); setShowWrapped(true); }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--yellow)' }}
               >
-                <Icons.Smartphone size={18} /> <span className="btn-text">DOWNLOAD APP</span>
-              </a>
-            )}
-            {showHeaderUtilityButtons && (
-              <div className="header-utility-buttons">
-                <button onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Icons.Download size={18} /> <span className="btn-text">Backup</span>
-                </button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                  onClick={() => { setIsMonthlyWrapped(false); setShowWrapped(true); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--yellow)' }}
-                >
-                  <Sparkles size={18} /> <span className="btn-text">Yearly Wrapped</span>
-                </motion.button>
-              </div>
-            )}
-          </div>
-        </header>
-      )}
+                <Sparkles size={18} /> <span className="btn-text">Yearly Wrapped</span>
+              </motion.button>
+            </div>
+          )}
+        </div>
+      </header>
 
       {!isNative && (
         <div className="mobile-download-banner">
