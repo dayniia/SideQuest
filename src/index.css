@@ -620,13 +620,22 @@ button:hover {
 /* ─── header: hide on mobile when bottom nav present ──────── */
 @media (max-width: 650px) {
   .app-header {
-    display: none !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    margin-bottom: 18px;
   }
 
   .mobile-page-title {
     font-size: 1.3rem;
     font-weight: 700;
     margin-bottom: 16px;
+  }
+
+  .header-download-link {
+    display: none !important;
   }
 
   .mobile-download-banner {

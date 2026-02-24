@@ -225,7 +225,7 @@ const App: React.FC = () => {
               href="https://github.com/dayniia/SideQuest/releases/download/latest/app-debug.apk"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-secondary icon-only"
+              className="btn btn-secondary icon-only header-download-link"
               title="Download Android App"
               style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
             >
