@@ -211,7 +211,9 @@ const App: React.FC = () => {
       {/* ── Desktop header (hidden on mobile via CSS) ── */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '15px' }} className="app-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }} className="logo-section">
-          <img src={logo} alt="SideQuest Logo" style={{ width: '60px', height: '60px', borderRadius: '12px', border: '2px solid var(--border)', boxShadow: 'var(--shadow)', objectFit: 'cover' }} />
+          {!isNative && (
+            <img src={logo} alt="SideQuest Logo" style={{ width: '60px', height: '60px', borderRadius: '12px', border: '2px solid var(--border)', boxShadow: 'var(--shadow)', objectFit: 'cover' }} />
+          )}
           <div>
             <h1 style={{ fontSize: '2.2rem', marginBottom: '0', display: 'flex', alignItems: 'center', gap: '8px' }}>
               SideQuest <Sparkles className="sparkle-icon" size={24} />

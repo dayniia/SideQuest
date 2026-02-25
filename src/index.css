@@ -217,6 +217,10 @@ button:hover {
     padding: 12px !important;
   }
 
+  main {
+    padding-bottom: 120px;
+  }
+
   h1 {
     font-size: 1.6rem !important;
   }
