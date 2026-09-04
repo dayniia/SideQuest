@@ -10,7 +10,7 @@ Instead of logging tasks, habits, or KPIs, it's designed for the messy, silly, a
 
 🌍 The Problem
 
-The future is automated.
+The future is automated.  
 
 Calendars are smart.
 To-do lists are AI-generated.
