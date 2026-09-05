@@ -3,7 +3,7 @@
 **Tracking the beautifully unhinged side-quests of your daily life.**
 
 SideQuest is a lo-fi, playful alternative to traditional productivity trackers.
-In a world increasingly optimized by AI and productivity systems, SideQuest imagines a future where we begin tracking what actually makes us human.
+In a world increasingly optimized by AI and productivity systems, SideQuest imagines a future where we begin tracking what actually makes us h uman.
 
 Instead of logging tasks, habits, or KPIs, it's designed for the messy, silly, and human moments—the "side-quests" you didn't plan for, like every time you try a new recipe, have a social "oops," or learn something truly bizarre on Google.
 
