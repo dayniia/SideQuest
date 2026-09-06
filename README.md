@@ -1,4 +1,4 @@
-# 🕹️ SideQuest.
+  # 🕹️ SideQuest.
 
 **Tracking the beautifully unhinged side-quests of your daily life.**
 
